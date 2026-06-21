@@ -4,6 +4,28 @@ function App() {
   const [screen, setScreen] = useState("home");
   const [matchFound, setMatchFound] = useState(false);
 
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      sender: "match",
+      text: "Hey! Looks like we had similar thoughts."
+    }
+  ]);
+
+  const sendMessage = () => {
+    if (!message.trim()) return;
+
+    setMessages([
+      ...messages,
+      {
+        sender: "me",
+        text: message
+      }
+    ]);
+
+    setMessage("");
+  };
+
   const handleFindMatch = () => {
     setScreen("matching");
 
@@ -46,10 +68,10 @@ function App() {
 
                 <button
                   className="btn btn-primary"
+                  onClick={() => setScreen("chat")}
                 >
                   Start Chat
                 </button>
-
               </div>
             </div>
           </>
@@ -58,6 +80,87 @@ function App() {
       </div>
     );
   }
+
+  if (screen === "chat") {
+    return (
+      <div className="container mt-4">
+
+        <h2 className="text-center">
+          Anonymous Chat
+        </h2>
+
+        <div
+          className="border rounded p-3 mt-4"
+          style={{
+            height: "400px",
+            overflowY: "auto"
+          }}
+        >
+
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={
+                msg.sender === "me"
+                  ? "text-end mb-3"
+                  : "text-start mb-3"
+              }
+            >
+              <span
+                className={
+                  msg.sender === "me"
+                    ? "badge bg-primary"
+                    : "badge bg-secondary"
+                }
+              >
+                {msg.text}
+              </span>
+            </div>
+          ))}
+
+        </div>
+
+        <div className="mt-3 d-flex">
+
+          <input
+            type="text"
+            className="form-control"
+            value={message}
+            onChange={(e) =>
+              setMessage(e.target.value)
+            }
+            placeholder="Type a message..."
+          />
+
+          <button
+            className="btn btn-primary ms-2"
+            onClick={sendMessage}
+          >
+            Send
+          </button>
+
+        </div>
+
+        <button
+          className="btn btn-danger mt-4 w-100"
+          onClick={() => {
+            setScreen("home");
+            setMatchFound(false);
+            setMessages([
+              {
+                sender: "match",
+                text:
+                  "Hey! Looks like we had similar thoughts."
+              }
+            ]);
+          }}
+        >
+          End Conversation
+        </button>
+
+      </div>
+    );
+}
 
   return (
     <>
