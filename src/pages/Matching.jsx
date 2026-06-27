@@ -1,53 +1,59 @@
-import { useEffect, useState } from "react";
+import './Matching.css';
 
-function Matching() {
-  const [matched, setMatched] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMatched(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
+function Matching({ onCancel }) {
   return (
-    <div className="container text-center mt-5">
+    <div className="matching-page">
 
-      {!matched ? (
-        <>
-          <h1>Finding Someone...</h1>
+      {/* ── Navbar ── */}
+      <nav className="nav" aria-label="Main navigation">
+        <span className="nav-logo">Tots</span>
+        <button className="nav-cancel" onClick={onCancel}>
+          Cancel
+        </button>
+      </nav>
 
-          <p>
-            Searching for people with similar thoughts
-          </p>
+      {/* ── Main Content ── */}
+      <main className="matching-body">
 
-          <div
-            className="spinner-border text-primary mt-4"
-            role="status"
-          />
-        </>
-      ) : (
-        <>
-          <h1>Match Found!</h1>
-
-          <div className="card mt-4 p-4">
-
-            <h2 className="text-success">
-              92% Match
-            </h2>
-
-            <p>
-              Someone has a very similar thought.
-            </p>
-
-            <button className="btn btn-primary">
-              Start Chat
-            </button>
-
+        {/* Pulse Ring */}
+        <div className="ring-wrap" aria-hidden="true">
+          <div className="ring-outer" />
+          <div className="ring-mid" />
+          <div className="ring-inner">
+            <svg className="ring-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
           </div>
-        </>
-      )}
+        </div>
+
+        <h1 className="matching-heading">Finding someone...</h1>
+
+        <p className="matching-sub">
+          Scanning for people around the world.{' '}
+          This only takes a moment.
+        </p>
+
+        {/* Bouncing Dots */}
+        <div className="dots" role="status" aria-label="Searching">
+          <div className="dot" />
+          <div className="dot" />
+          <div className="dot" />
+        </div>
+
+        {/* Live count — swap hardcoded value with real socket data later */}
+        <p className="online-count">
+          <strong>1,284</strong> people online right now
+        </p>
+
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="footer">
+        <a className="footer-link" href="#">Privacy</a>
+        <a className="footer-link" href="#">Terms</a>
+        <a className="footer-link" href="#">Contact</a>
+      </footer>
 
     </div>
   );

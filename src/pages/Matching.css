@@ -1,0 +1,225 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Reset ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+  --primary:        #77DD77;
+  --primary-hover:  #66CC66;
+  --background:     #F8FBF8;
+  --card:           #FFFFFF;
+  --secondary:      #D0F0C0;
+  --text:           #1F2937;
+  --text-light:     #6B7280;
+}
+
+/* ── Base ───────────────────────────────────────────── */
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--background);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page Layout ─────────────────────────────────────── */
+.matching-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Navbar ─────────────────────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  padding: 0 40px;
+  background: transparent;
+}
+
+.nav-logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+  user-select: none;
+}
+
+.nav-cancel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-light);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.2s ease;
+  padding: 8px 0;
+}
+
+.nav-cancel:hover {
+  color: var(--text);
+}
+
+/* ── Main Body ───────────────────────────────────────── */
+.matching-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* ── Pulse Ring ──────────────────────────────────────── */
+.ring-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin-bottom: 44px;
+}
+
+.ring-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--secondary);
+  animation: ring-pulse 2.4s ease-in-out infinite;
+}
+
+.ring-mid {
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  border: 2px solid #A8E0A8;
+  animation: ring-pulse 2.4s ease-in-out infinite 0.3s;
+}
+
+.ring-inner {
+  position: absolute;
+  inset: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ring-beat 2.4s ease-in-out infinite;
+}
+
+.ring-icon {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.06); }
+}
+
+@keyframes ring-beat {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.07); }
+}
+
+/* ── Heading ─────────────────────────────────────────── */
+.matching-heading {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+/* ── Subtitle ────────────────────────────────────────── */
+.matching-sub {
+  font-size: 17px;
+  color: var(--text-light);
+  line-height: 1.6;
+  max-width: 340px;
+  margin-bottom: 48px;
+}
+
+/* ── Bouncing Dots ───────────────────────────────────── */
+.dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 56px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: dot-bounce 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+  40%            { opacity: 1;    transform: scale(1); }
+}
+
+/* ── Online Count ────────────────────────────────────── */
+.online-count {
+  font-size: 13px;
+  color: #9CA3AF;
+  letter-spacing: 0.02em;
+}
+
+.online-count strong {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 28px 40px 36px;
+}
+
+.footer-link {
+  font-size: 13px;
+  color: #C4CAD4;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--text-light);
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 640px) {
+  .nav {
+    padding: 0 20px;
+  }
+
+  .matching-heading {
+    font-size: 28px;
+  }
+
+  .matching-sub {
+    font-size: 16px;
+  }
+}
