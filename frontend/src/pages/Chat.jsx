@@ -1,29 +1,38 @@
-import { useRef, useEffect } from 'react';
-import './Chat.css';
+import { useRef, useEffect } from "react";
+import "./Chat.css";
 
 function formatTime() {
   return new Date().toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
-function Chat({ messages, message, setMessage, onSend, onNext }) {
+function Chat({
+  myId,
+  messages,
+  message,
+  setMessage,
+  onSend,
+  onNext,
+}) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  /* Auto-scroll to bottom on new messages */
+  // Auto-scroll
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
   }, [messages]);
 
-  /* Focus input on mount */
+  // Focus input
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       onSend();
     }
@@ -31,15 +40,18 @@ function Chat({ messages, message, setMessage, onSend, onNext }) {
 
   return (
     <div className="chat-page">
-
-      {/* ── Header ── */}
+      {/* Header */}
       <header className="chat-header">
         <div className="chat-header-left">
-          <div className="chat-avatar" aria-hidden="true">A</div>
+          <div className="chat-avatar">A</div>
+
           <div className="chat-header-info">
-            <span className="chat-header-name">Anonymous</span>
+            <span className="chat-header-name">
+              Anonymous
+            </span>
+
             <span className="chat-header-status">
-              <span className="status-dot" />
+              <span className="status-dot"></span>
               Online now
             </span>
           </div>
@@ -48,74 +60,80 @@ function Chat({ messages, message, setMessage, onSend, onNext }) {
         <div className="chat-header-actions">
           <button
             className="header-icon-btn"
-            aria-label="More options"
-            title="More options"
+            title="More"
           >
-            {/* Kebab icon — three vertical dots */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="5"  r="1.2" fill="currentColor" stroke="none"/>
-              <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
-              <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/>
-            </svg>
+            ⋮
           </button>
 
-          <button className="next-btn" onClick={onNext}>
-            {/* Arrow right icon */}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6"/>
-            </svg>
-            <span>Next person</span>
+          <button
+            className="next-btn"
+            onClick={onNext}
+          >
+            Next Person →
           </button>
         </div>
       </header>
 
-      {/* ── Messages ── */}
-      <main className="chat-messages" role="log" aria-live="polite">
+      {/* Messages */}
+
+      <main className="chat-messages">
 
         <div className="system-msg">
-          You're now connected to a stranger. Say hi!
+          You're now connected to a stranger.
         </div>
 
         {messages.map((msg, index) => {
-          const isMe = msg.sender === 'me';
+          console.log("Current User:", myId);
+          console.log("Message:", msg);
+
+          const isMe =
+            msg.senderId === myId;
+
           return (
+
             <div
               key={index}
-              className={`msg-row ${isMe ? 'me' : 'them'}`}
+              className={`msg-row ${
+                isMe ? "me" : "them"
+              }`}
             >
+
               {!isMe && (
-                <div className="msg-mini-avatar" aria-hidden="true">A</div>
+                <div className="msg-mini-avatar">
+                  A
+                </div>
               )}
-              <div className={`bubble ${isMe ? 'me' : 'them'}`}>
-                {msg.text}
+
+              <div
+                className={`bubble ${
+                  isMe ? "me" : "them"
+                }`}
+              >
+
+                <div>{msg.text}</div>
+
                 <span className="bubble-time">
                   {msg.time || formatTime()}
-                  {isMe && ' ✓✓'}
+
+                  {isMe && " ✓✓"}
+
                 </span>
+
               </div>
+
             </div>
+
           );
+
         })}
 
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef}></div>
+
       </main>
 
-      {/* ── Input Bar ── */}
+      {/* Input */}
+
       <footer className="chat-input-bar">
-        <button className="input-emoji-btn" aria-label="Emoji">
-          {/* Smile icon */}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-            strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
-          </svg>
-        </button>
 
         <input
           ref={inputRef}
@@ -123,26 +141,22 @@ function Chat({ messages, message, setMessage, onSend, onNext }) {
           type="text"
           placeholder="Type a message..."
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) =>
+            setMessage(
+              e.target.value
+            )
+          }
           onKeyDown={handleKeyDown}
-          aria-label="Message input"
         />
 
         <button
           className="send-btn"
           onClick={onSend}
-          aria-label="Send message"
         >
-          {/* Send icon */}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-            strokeLinejoin="round" aria-hidden="true">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
+          Send
         </button>
-      </footer>
 
+      </footer>
     </div>
   );
 }

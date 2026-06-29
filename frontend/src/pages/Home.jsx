@@ -5,10 +5,6 @@ function Home({ onStart }) {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Navbar ── */}
-      <nav className="nav" aria-label="Main navigation">
-        <span className="nav-logo">Tots</span>
-        <a className="nav-link" href="#">About</a>
-      </nav>
 
       {/* ── Hero ── */}
       <main className="hero">
@@ -31,25 +27,7 @@ function Home({ onStart }) {
       </main>
 
       {/* ── Feature Cards ── */}
-      <section className="cards" aria-label="Features">
-        <div className="card">
-          <div className="card-icon" aria-hidden="true">🎭</div>
-          <div className="card-title">Anonymous</div>
-          <div className="card-body">No personal information required.</div>
-        </div>
-
-        <div className="card">
-          <div className="card-icon" aria-hidden="true">⚡</div>
-          <div className="card-title">Instant</div>
-          <div className="card-body">Connect within seconds.</div>
-        </div>
-
-        <div className="card">
-          <div className="card-icon" aria-hidden="true">🌱</div>
-          <div className="card-title">Free</div>
-          <div className="card-body">No subscriptions, ever.</div>
-        </div>
-      </section>
+      
 
       {/* ── Footer ── */}
       <footer className="footer">

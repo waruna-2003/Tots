@@ -52,15 +52,15 @@ io.on("connection", (socket) => {
 
         partnerSocket.join(roomId);
 
-        socket.emit(
-          "match_found",
-          { roomId }
-        );
+        socket.emit("match_found", {
+          roomId,
+          myId: socket.id
+        });
 
-        partnerSocket.emit(
-          "match_found",
-          { roomId }
-        );
+        partnerSocket.emit("match_found", {
+          roomId,
+          myId: partnerSocket.id
+        });
 
         console.log(
           `Matched ${socket.id} and ${partner}`
@@ -77,17 +77,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on(
-    "send_message",
-    (data) => {
+  socket.on("send_message", (data) => {
 
-      io.to(data.roomId).emit(
-        "receive_message",
-        data
-      );
+    io.to(data.roomId).emit("receive_message", {
+      senderId: socket.id,
+      text: data.text,
+      time: data.time
+    });
 
-    }
-  );
+  });
 
   socket.on(
     "disconnect",

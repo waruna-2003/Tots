@@ -1,26 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── Reset ─────────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 
-/* ── Design Tokens ──────────────────────────────────── */
 :root {
-  --primary:        #77DD77;
-  --primary-hover:  #66CC66;
-  --background:     #F8FBF8;
-  --card:           #FFFFFF;
-  --secondary:      #D0F0C0;
-  --text:           #1F2937;
-  --text-light:     #6B7280;
+  --primary:       #77DD77;
+  --primary-hover: #66CC66;
+  --background:    #F8FBF8;
+  --card:          #FFFFFF;
+  --secondary:     #D0F0C0;
+  --text:          #1F2937;
+  --text-light:    #6B7280;
 }
 
-/* ── Base ───────────────────────────────────────────── */
 body {
   font-family: 'Inter', sans-serif;
   background: var(--background);
@@ -28,14 +19,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Page Layout ─────────────────────────────────────── */
 .matching-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* ── Navbar ─────────────────────────────────────────── */
+/* ── Navbar ── */
 .nav {
   display: flex;
   align-items: center;
@@ -65,11 +55,9 @@ body {
   padding: 8px 0;
 }
 
-.nav-cancel:hover {
-  color: var(--text);
-}
+.nav-cancel:hover { color: var(--text); }
 
-/* ── Main Body ───────────────────────────────────────── */
+/* ── Body ── */
 .matching-body {
   flex: 1;
   display: flex;
@@ -80,85 +68,51 @@ body {
   padding: 0 24px;
 }
 
-/* ── Pulse Ring ──────────────────────────────────────── */
-.ring-wrap {
+/* ── Orbit Canvas ── */
+.orbit-wrap {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 260px;
+  height: 260px;
   margin-bottom: 44px;
 }
 
-.ring-outer {
+.orbit-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid var(--secondary);
-  animation: ring-pulse 2.4s ease-in-out infinite;
+  border: 1.5px dashed var(--secondary);
 }
 
-.ring-mid {
+.center-fig {
   position: absolute;
-  inset: 16px;
-  border-radius: 50%;
-  border: 2px solid #A8E0A8;
-  animation: ring-pulse 2.4s ease-in-out infinite 0.3s;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.ring-inner {
-  position: absolute;
-  inset: 32px;
-  border-radius: 50%;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: ring-beat 2.4s ease-in-out infinite;
-}
-
-.ring-icon {
-  width: 28px;
-  height: 28px;
-  fill: none;
-  stroke: #ffffff;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-@keyframes ring-pulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.06); }
-}
-
-@keyframes ring-beat {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.07); }
-}
-
-/* ── Heading ─────────────────────────────────────────── */
+/* ── Text ── */
 .matching-heading {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: -1px;
   color: var(--text);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-/* ── Subtitle ────────────────────────────────────────── */
 .matching-sub {
   font-size: 17px;
   color: var(--text-light);
+  max-width: 320px;
   line-height: 1.6;
-  max-width: 340px;
-  margin-bottom: 48px;
+  margin-bottom: 44px;
 }
 
-/* ── Bouncing Dots ───────────────────────────────────── */
+/* ── Dots ── */
 .dots {
   display: flex;
   gap: 8px;
   justify-content: center;
-  margin-bottom: 56px;
+  margin-bottom: 52px;
 }
 
 .dot {
@@ -177,11 +131,10 @@ body {
   40%            { opacity: 1;    transform: scale(1); }
 }
 
-/* ── Online Count ────────────────────────────────────── */
+/* ── Online count ── */
 .online-count {
   font-size: 13px;
   color: #9CA3AF;
-  letter-spacing: 0.02em;
 }
 
 .online-count strong {
@@ -189,7 +142,7 @@ body {
   font-weight: 600;
 }
 
-/* ── Footer ──────────────────────────────────────────── */
+/* ── Footer ── */
 .footer {
   display: flex;
   justify-content: center;
@@ -205,21 +158,11 @@ body {
   transition: color 0.2s ease;
 }
 
-.footer-link:hover {
-  color: var(--text-light);
-}
+.footer-link:hover { color: var(--text-light); }
 
-/* ── Responsive ───────────────────────────────────────── */
+/* ── Responsive ── */
 @media (max-width: 640px) {
-  .nav {
-    padding: 0 20px;
-  }
-
-  .matching-heading {
-    font-size: 28px;
-  }
-
-  .matching-sub {
-    font-size: 16px;
-  }
+  .nav { padding: 0 20px; }
+  .matching-heading { font-size: 26px; }
+  .orbit-wrap { width: 220px; height: 220px; }
 }
