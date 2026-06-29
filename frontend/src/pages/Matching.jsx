@@ -93,10 +93,6 @@ function Matching({ onCancel, onlineCount = 1284 }) {
     <div className="matching-page">
 
       {/* ── Navbar ── */}
-      <nav className="nav" aria-label="Main navigation">
-        <span className="nav-logo">Tots</span>
-        <button className="nav-cancel" onClick={onCancel}>Cancel</button>
-      </nav>
 
       {/* ── Body ── */}
       <main className="matching-body">
@@ -124,12 +120,6 @@ function Matching({ onCancel, onlineCount = 1284 }) {
           This only takes a moment.
         </p>
 
-        <div className="dots" role="status" aria-label="Searching">
-          <div className="dot" />
-          <div className="dot" />
-          <div className="dot" />
-        </div>
-
         {/* Replace onlineCount with live socket value when backend reconnects */}
         <p className="online-count">
           <strong>{onlineCount.toLocaleString()}</strong> people online right now
@@ -138,11 +128,6 @@ function Matching({ onCancel, onlineCount = 1284 }) {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="footer">
-        <a className="footer-link" href="#">Privacy</a>
-        <a className="footer-link" href="#">Terms</a>
-        <a className="footer-link" href="#">Contact</a>
-      </footer>
 
     </div>
   );
