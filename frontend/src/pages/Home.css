@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 /* ── Reset ─────────────────────────────────────────── */
 *,
 *::before,
@@ -10,7 +8,7 @@
 }
 
 /* ── Design Tokens ──────────────────────────────────── */
-:root {
+.home-page {
   --primary:        #77DD77;
   --primary-hover:  #66CC66;
   --background:     #F8FBF8;
@@ -21,11 +19,14 @@
 }
 
 /* ── Base ───────────────────────────────────────────── */
-body {
+.home-page {
   font-family: 'Inter', sans-serif;
   background: var(--background);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Navbar ─────────────────────────────────────────── */

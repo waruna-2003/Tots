@@ -15,6 +15,9 @@ function Chat({
   setMessage,
   onSend,
   onNext,
+  onReport,
+  notice,
+  canSend,
 }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -60,9 +63,11 @@ function Chat({
         <div className="chat-header-actions">
           <button
             className="header-icon-btn"
-            title="More"
+            title="Report this person"
+            aria-label="Report this person"
+            onClick={onReport}
           >
-            ⋮
+            Report
           </button>
 
           <button
@@ -79,12 +84,10 @@ function Chat({
       <main className="chat-messages">
 
         <div className="system-msg">
-          You're now connected to a stranger.
+          {notice || "You're now connected to a stranger."}
         </div>
 
         {messages.map((msg, index) => {
-          console.log("Current User:", myId);
-          console.log("Message:", msg);
 
           const isMe =
             msg.senderId === myId;
@@ -92,7 +95,7 @@ function Chat({
           return (
 
             <div
-              key={index}
+              key={msg.id || index}
               className={`msg-row ${
                 isMe ? "me" : "them"
               }`}
@@ -113,7 +116,7 @@ function Chat({
                 <div>{msg.text}</div>
 
                 <span className="bubble-time">
-                  {msg.time || formatTime()}
+                  {msg.time ? new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : formatTime()}
 
                   {isMe && " ✓✓"}
 
@@ -147,11 +150,13 @@ function Chat({
             )
           }
           onKeyDown={handleKeyDown}
+          disabled={!canSend}
         />
 
         <button
           className="send-btn"
           onClick={onSend}
+          disabled={!canSend || !message.trim()}
         >
           Send
         </button>

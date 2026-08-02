@@ -14,7 +14,7 @@ function PersonIcon({ color, size = 36 }) {
   );
 }
 
-function Matching({ onCancel, onlineCount = 1284 }) {
+function Matching({ onCancel, onlineCount = 0, notice = '' }) {
   const orbitRef  = useRef(null);
   const rafRef    = useRef(null);
   const startRef  = useRef(null);
@@ -116,14 +116,15 @@ function Matching({ onCancel, onlineCount = 1284 }) {
 
         <h1 className="matching-heading">Finding someone...</h1>
         <p className="matching-sub">
-          Scanning for people around the world.{' '}
-          This only takes a moment.
+          {notice || 'Scanning for people around the world. This only takes a moment.'}
         </p>
 
         {/* Replace onlineCount with live socket value when backend reconnects */}
         <p className="online-count">
-          <strong>{onlineCount.toLocaleString()}</strong> people online right now
+          <strong>{onlineCount.toLocaleString()}</strong> {onlineCount === 1 ? 'person' : 'people'} online right now
         </p>
+
+        <button className="nav-cancel" type="button" onClick={onCancel}>Cancel</button>
 
       </main>
 
