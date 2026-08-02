@@ -40,12 +40,22 @@ function App() {
       setScreen("chat");
     };
     const onReceiveMessage = (data) => setMessages((previous) => [...previous, data]);
-    const onPartnerLeft = () => {
+    const onPartnerLeft = ({ reason } = {}) => {
       setRoomId(null);
-      setNotice("The stranger left the chat.");
+      const text = reason === "connection_lost"
+        ? "Your partner lost connection."
+        : "Your partner left the conversation.";
+      setNotice("");
+      setMessages((previous) => [...previous, {
+        id: `system-${Date.now()}`,
+        senderId: "system",
+        text,
+        time: "",
+      }]);
     };
     const onPresence = ({ online }) => setOnlineCount(online);
     const onChatError = ({ message: errorMessage }) => setNotice(errorMessage);
+    const onServerError = ({ message: errorMessage }) => setNotice(errorMessage);
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -55,6 +65,7 @@ function App() {
     socket.on("partner_left", onPartnerLeft);
     socket.on("presence", onPresence);
     socket.on("chat_error", onChatError);
+    socket.on("server_error", onServerError);
     if (!socket.connected) socket.connect();
 
     return () => {
@@ -66,6 +77,7 @@ function App() {
       socket.off("partner_left", onPartnerLeft);
       socket.off("presence", onPresence);
       socket.off("chat_error", onChatError);
+      socket.off("server_error", onServerError);
     };
   }, []);
 
@@ -94,7 +106,7 @@ function App() {
   }, [message, roomId]);
 
   const nextPerson = useCallback(() => {
-    socket.emit("leave_chat", () => beginMatching());
+    socket.emit("leave_chat", { reason: "next_person" }, () => beginMatching());
   }, [beginMatching]);
 
   const reportPartner = useCallback(() => {

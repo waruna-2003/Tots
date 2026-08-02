@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const { io: createClient } = require("../../frontend/node_modules/socket.io-client");
 const { createChatServer } = require("../server");
 const activeUsers = require("../state/activeUsers");
+const activeChats = require("../state/activeChats");
 
 function once(socket, event, timeout = 2_000) {
   return new Promise((resolve, reject) => {
@@ -18,6 +19,12 @@ function getProfile(socket) {
   const profile = once(socket, "my_profile");
   socket.emit("get_my_profile");
   return profile;
+}
+
+function getCurrentChat(socket) {
+  const chat = once(socket, "current_chat");
+  socket.emit("get_current_chat");
+  return chat;
 }
 
 async function waitUntil(predicate, timeout = 2_000) {
@@ -70,6 +77,10 @@ test("matches two users, validates rooms, and ends the old session", async (t) =
   assert.equal(acknowledgement.ok, true);
   assert.equal((await received).text, "hello");
   assert.equal((await getProfile(second)).statistics.totalMessages, 1);
+  const trackedChat = await getCurrentChat(second);
+  assert.equal(trackedChat.messages.length, 1);
+  assert.equal(trackedChat.messages[0].wordCount, 1);
+  assert.equal(trackedChat.participantStats[second.id].messageCount, 1);
 
   const invalid = await new Promise((resolve) => {
     second.emit("send_message", { roomId: "made-up-room", text: "nope" }, resolve);
@@ -82,11 +93,49 @@ test("matches two users, validates rooms, and ends the old session", async (t) =
   const departedProfile = await getProfile(second);
   assert.equal(departedProfile.status, "idle");
   assert.equal(departedProfile.currentRoomId, null);
+  assert.equal(departedProfile.statistics.chatsCompleted, 1);
+  assert.equal(activeChats.has(secondSession.roomId), false);
 
   const secondId = second.id;
   assert.equal(activeUsers.has(secondId), true);
   second.disconnect();
   await waitUntil(() => !activeUsers.has(secondId));
+});
+
+test("disconnect ends tracking and tells the remaining partner", async (t) => {
+  const { server } = createChatServer({ origins: ["http://localhost"] });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const url = `http://127.0.0.1:${server.address().port}`;
+  const clients = [];
+  t.after(() => {
+    clients.forEach((client) => client.disconnect());
+    server.close();
+  });
+  const connect = async () => {
+    const client = createClient(url, { forceNew: true });
+    clients.push(client);
+    await once(client, "connect");
+    return client;
+  };
+
+  const first = await connect();
+  const second = await connect();
+  first.emit("find_match");
+  await once(first, "match_waiting");
+  const firstMatched = once(first, "match_found");
+  const secondMatched = once(second, "match_found");
+  second.emit("find_match");
+  const [session] = await Promise.all([firstMatched, secondMatched]);
+  assert.equal(activeChats.has(session.roomId), true);
+
+  const partnerLeft = once(first, "partner_left");
+  second.disconnect();
+  assert.equal((await partnerLeft).reason, "connection_lost");
+  await waitUntil(() => !activeChats.has(session.roomId));
+  const remainingProfile = await getProfile(first);
+  assert.equal(remainingProfile.status, "idle");
+  assert.equal(remainingProfile.currentRoomId, null);
+  assert.equal(remainingProfile.statistics.chatsCompleted, 1);
 });
 
 test("deduplicates waiting users and skips disconnected entries", async (t) => {

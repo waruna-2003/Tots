@@ -54,8 +54,8 @@ function Chat({
             </span>
 
             <span className="chat-header-status">
-              <span className="status-dot"></span>
-              Online now
+              <span className={`status-dot ${canSend ? "" : "offline"}`}></span>
+              {canSend ? "Online now" : "Conversation ended"}
             </span>
           </div>
         </div>
@@ -83,11 +83,17 @@ function Chat({
 
       <main className="chat-messages">
 
-        <div className="system-msg">
-          {notice || "You're now connected to a stranger."}
-        </div>
+        {(notice || messages.length === 0) && (
+          <div className="system-msg">
+            {notice || (canSend ? "You're now connected to a stranger." : "This conversation has ended.")}
+          </div>
+        )}
 
         {messages.map((msg, index) => {
+
+          if (msg.senderId === "system") {
+            return <div key={msg.id || index} className="system-msg">{msg.text}</div>;
+          }
 
           const isMe =
             msg.senderId === myId;

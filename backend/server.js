@@ -4,7 +4,14 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { v4: uuidv4 } = require("uuid");
 const activeUsers = require("./state/activeUsers");
+const activeChats = require("./state/activeChats");
 const createTemporaryUser = require("./factories/createTemporaryUser");
+const createTemporaryChat = require("./factories/createTemporaryChat");
+const {
+  recordMessage,
+  finishChat,
+  createConversationSummary,
+} = require("./services/conversationTracker");
 
 const DEFAULT_ORIGINS = [
   "http://localhost:5173",
@@ -42,7 +49,7 @@ function createChatServer(options = {}) {
     if (index !== -1) waitingQueue.splice(index, 1);
   }
 
-  function leaveSession(socket, reason = "left") {
+  function resetUserSession(socket) {
     removeFromQueue(socket.id);
     const roomId = socket.data.roomId;
     const user = activeUsers.get(socket.id);
@@ -51,14 +58,51 @@ function createChatServer(options = {}) {
       user.status = "idle";
       user.currentRoomId = null;
       user.lastActiveAt = Date.now();
-      if (reason === "next" && roomId) user.statistics.chatsSkipped += 1;
     }
 
-    if (!roomId) return;
-
     socket.data.roomId = null;
-    socket.to(roomId).emit("partner_left", { reason });
-    socket.leave(roomId);
+    if (roomId) socket.leave(roomId);
+  }
+
+  function endActiveChat({ roomId, endedBy, reason, notifyPartner = true }) {
+    if (!roomId) return null;
+    const chat = activeChats.get(roomId);
+    if (!chat) return null;
+
+    finishChat(chat, endedBy, reason, Date.now());
+    const summary = createConversationSummary(chat);
+    const partnerId = chat.participants.find((participantId) => participantId !== endedBy) || null;
+
+    for (const participantId of chat.participants) {
+      const user = activeUsers.get(participantId);
+      if (user) {
+        const completedBefore = user.statistics.chatsCompleted;
+        user.statistics.averageChatDurationMs =
+          ((user.statistics.averageChatDurationMs * completedBefore) + summary.durationMs) /
+          (completedBefore + 1);
+        const responseAverage = summary.participants[participantId].averageResponseTimeMs;
+        user.statistics.averageResponseTimeMs =
+          ((user.statistics.averageResponseTimeMs * completedBefore) + responseAverage) /
+          (completedBefore + 1);
+        user.statistics.chatsCompleted += 1;
+        if (participantId === endedBy && reason === "next_person") {
+          user.statistics.chatsSkipped += 1;
+        }
+        user.status = "idle";
+        user.currentRoomId = null;
+        user.lastActiveAt = Date.now();
+      }
+
+      const participantSocket = io.sockets.sockets.get(participantId);
+      if (participantSocket) {
+        participantSocket.data.roomId = null;
+        participantSocket.leave(roomId);
+      }
+    }
+
+    activeChats.delete(roomId);
+    if (notifyPartner && partnerId) io.to(partnerId).emit("partner_left", { reason });
+    return { chat, summary, partnerId };
   }
 
   function nextWaitingSocket(excludeId) {
@@ -100,7 +144,12 @@ function createChatServer(options = {}) {
         return;
       }
 
-      leaveSession(socket, "next");
+      const previousRoomId = socket.data.roomId;
+      if (previousRoomId) {
+        endActiveChat({ roomId: previousRoomId, endedBy: socket.id, reason: "next_person" });
+      } else {
+        resetUserSession(socket);
+      }
       const partner = nextWaitingSocket(socket.id);
 
       if (!partner) {
@@ -119,6 +168,7 @@ function createChatServer(options = {}) {
       partner.data.roomId = roomId;
       socket.join(roomId);
       partner.join(roomId);
+      activeChats.set(roomId, createTemporaryChat(roomId, socket.id, partner.id));
 
       const now = Date.now();
       currentUser.status = "chatting";
@@ -133,12 +183,20 @@ function createChatServer(options = {}) {
     });
 
     socket.on("cancel_match", (acknowledge) => {
-      leaveSession(socket, "cancelled");
+      resetUserSession(socket);
       if (typeof acknowledge === "function") acknowledge({ ok: true });
     });
 
-    socket.on("leave_chat", (acknowledge) => {
-      leaveSession(socket, "left");
+    socket.on("leave_chat", (payload = {}, acknowledge) => {
+      if (typeof payload === "function") {
+        acknowledge = payload;
+        payload = {};
+      }
+      const roomId = socket.data.roomId;
+      const reason = typeof payload.reason === "string" ? payload.reason : "left";
+      const ended = endActiveChat({ roomId, endedBy: socket.id, reason });
+      if (!ended) resetUserSession(socket);
+      socket.emit("chat_left", { roomId: roomId || null });
       if (typeof acknowledge === "function") acknowledge({ ok: true });
     });
 
@@ -181,14 +239,30 @@ function createChatServer(options = {}) {
         fail("PROFILE_NOT_FOUND", "Temporary user profile was not found.");
         return;
       }
+
+      const chat = activeChats.get(roomId);
+      if (!chat) {
+        fail("CHAT_NOT_FOUND", "The active chat could not be found.");
+        return;
+      }
+
+      let messageEvent;
+      try {
+        messageEvent = recordMessage(chat, socket.id, text, now);
+      } catch (error) {
+        console.error("Message tracking error:", error.message);
+        fail("TRACKING_ERROR", "Unable to send message.");
+        return;
+      }
+
       currentUser.lastActiveAt = now;
       currentUser.statistics.totalMessages += 1;
 
       io.to(roomId).emit("receive_message", {
         id: uuidv4(),
         senderId: socket.id,
-        text,
-        time: new Date(now).toISOString(),
+        text: messageEvent.text,
+        time: new Date(messageEvent.sentAt).toISOString(),
       });
       if (typeof acknowledge === "function") acknowledge({ ok: true });
     });
@@ -213,10 +287,19 @@ function createChatServer(options = {}) {
       socket.on("get_my_profile", () => {
         socket.emit("my_profile", activeUsers.get(socket.id) || null);
       });
+      socket.on("get_current_chat", () => {
+        const user = activeUsers.get(socket.id);
+        const chat = user?.currentRoomId ? activeChats.get(user.currentRoomId) : null;
+        socket.emit("current_chat", chat || null);
+      });
     }
 
     socket.on("disconnect", () => {
-      leaveSession(socket, "disconnected");
+      removeFromQueue(socket.id);
+      const roomId = socket.data.roomId || activeUsers.get(socket.id)?.currentRoomId;
+      if (roomId) {
+        endActiveChat({ roomId, endedBy: socket.id, reason: "connection_lost" });
+      }
       activeUsers.delete(socket.id);
       broadcastPresence();
     });
