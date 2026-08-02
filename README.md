@@ -1,88 +1,276 @@
 # Tots
 
-A small web project built with HTML, CSS, and JavaScript. Tots is a front-end focused repository designed for responsive UI components and interactive behaviors.
+Tots is a private, instant, anonymous one-to-one chat application. It connects two active users through Socket.IO without requiring accounts, usernames, or permanent chat history.
 
-## Table of Contents
-
-- [About](#about)
-- [Demo](#demo)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Run locally](#run-locally)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
-
-## About
-
-Tots contains client-side code (CSS, JavaScript, and HTML) for a small web interface. The repository focuses on clean styling, accessibility-minded components, and lightweight, dependency-free JavaScript.
-
-## Demo
-
-Open `index.html` in your browser to view the project. For a simple local server run:
-
-- With Python 3:
-
-  python -m http.server 8000
-
-- With Node.js (if you have a static server like `serve`):
-
-  npx serve -s .
-
-Then open http://localhost:8000 in your browser.
+The current version includes a responsive WhatsApp-inspired interface, reliable room lifecycle management, temporary behavioral profiles, and in-memory conversation-event tracking.
 
 ## Features
 
-- Responsive layout and styles (CSS-first)
-- Interactive behavior implemented in vanilla JavaScript
-- Minimal external dependencies
+- Anonymous one-to-one matchmaking
+- Real-time Socket.IO messaging
+- Responsive home, matching, and chat screens
+- Live online-user count
+- Cancel search and next-person controls
+- Partner departure and connection-loss notifications
+- Automatic reconnection handling
+- Room-membership validation
+- Message length limits and rate limiting
+- Basic partner reporting
+- Temporary user profiles with neutral behavior scores
+- Temporary conversation and interaction tracking
+- Automatic deletion of profiles on disconnect
+- Automatic deletion of raw conversation data when a chat ends
 
-> If your project includes specific components (carousel, modal, form), add short descriptions here.
+## Technology
 
-## Tech Stack
+### Frontend
 
-- CSS — styling and layout (majority of repository)
-- JavaScript — interactive behaviors
-- HTML — markup and structure
+- React 19
+- Vite 8
+- Socket.IO Client
+- CSS with responsive mobile, tablet, and desktop layouts
 
-## Getting Started
+### Backend
 
-### Prerequisites
+- Node.js
+- Express 5
+- Socket.IO
+- In-memory `Map` and queue state
+- Node's built-in test runner
 
-No build steps required for a static site. Optional tools:
+## Project structure
 
-- Node.js (for local tooling)
-- Python 3 (for quick static server)
+```text
+tots/
+├── backend/
+│   ├── factories/
+│   │   ├── createTemporaryChat.js
+│   │   └── createTemporaryUser.js
+│   ├── services/
+│   │   └── conversationTracker.js
+│   ├── state/
+│   │   ├── activeChats.js
+│   │   └── activeUsers.js
+│   ├── test/
+│   │   ├── activeUsers.test.js
+│   │   ├── chat.test.js
+│   │   └── conversationTracker.test.js
+│   ├── package.json
+│   └── server.js
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Chat.jsx
+│   │   │   ├── Home.jsx
+│   │   │   └── Matching.jsx
+│   │   ├── services/
+│   │   │   └── socket.js
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
+```
 
-### Run locally
+## Local development
 
-1. Clone the repo:
+### Requirements
 
-   git clone https://github.com/waruna-2003/Tots.git
-2. Change directory:
+- Node.js 20 or newer
+- npm
 
-   cd Tots
-3. Serve the files using one of the methods in the Demo section.
+### 1. Install backend dependencies
 
-## Development
+```bash
+cd backend
+npm install
+```
 
-- Keep components modular and styles organized in CSS files.
-- Follow semantic HTML for accessibility.
-- Keep JavaScript dependency-free where possible; if adding packages, include a short note in this README.
+### 2. Install frontend dependencies
 
-## Contributing
+```bash
+cd ../frontend
+npm install
+```
 
-Contributions are welcome. Please open an issue first to discuss larger changes. For small fixes, submit a pull request with a clear description of the change.
+### 3. Start the backend
+
+From the `backend` directory:
+
+```bash
+npm run dev
+```
+
+The backend listens on `http://localhost:5000` by default.
+
+### 4. Start the frontend
+
+From the `frontend` directory:
+
+```bash
+npm run dev
+```
+
+Open the local URL displayed by Vite, normally `http://localhost:5173`.
+
+## Configuration
+
+### Frontend
+
+The frontend automatically uses `http://localhost:5000` when opened on localhost. In other environments it uses the configured production backend.
+
+Override the Socket.IO server with:
+
+```env
+VITE_SOCKET_URL=https://your-backend.example.com
+```
+
+### Backend
+
+Set the listening port with:
+
+```env
+PORT=5000
+```
+
+Configure allowed frontend origins as a comma-separated list:
+
+```env
+CLIENT_ORIGINS=http://localhost:5173,https://your-frontend.example.com
+```
+
+## Application lifecycle
+
+```text
+Connect
+  ↓
+Create temporary neutral user profile
+  ↓
+Enter matchmaking queue
+  ↓
+Create a room and temporary chat record
+  ↓
+Exchange validated real-time messages
+  ↓
+Track temporary interaction events
+  ↓
+Produce an anonymous conversation summary
+  ↓
+Delete raw chat data
+  ↓
+Return to matchmaking or disconnect
+```
+
+## Temporary user profiles
+
+Every active socket receives a temporary profile containing:
+
+- A random session ID
+- Current status: `idle`, `waiting`, or `chatting`
+- Current room ID
+- Neutral behavior scores
+- Temporary interests
+- Chat, skip, message, duration, and response-time statistics
+- Creation and last-activity timestamps
+
+Profiles are keyed by the technical Socket.IO connection ID and deleted when the connection ends.
+
+## Conversation tracking
+
+Each active room temporarily records:
+
+- Participants and start time
+- Valid message events
+- Character and word counts
+- Question usage
+- Response times between different senders
+- First and last message timestamps
+- Conversation duration
+- Who ended the chat and why
+
+When the conversation finishes, Tots creates an aggregate summary, updates the temporary user statistics, and removes the chat record and raw message text from memory.
+
+## Socket.IO events
+
+### Client to server
+
+- `find_match`
+- `cancel_match`
+- `leave_chat`
+- `send_message`
+- `report_partner`
+
+Development-only inspection events are disabled in production:
+
+- `get_my_profile`
+- `get_current_chat`
+
+### Server to client
+
+- `match_waiting`
+- `match_found`
+- `chat_left`
+- `receive_message`
+- `partner_left`
+- `presence`
+- `chat_error`
+- `server_error`
+
+## Testing
+
+Run backend unit and integration tests:
+
+```bash
+cd backend
+npm test
+```
+
+Run frontend linting and create a production build:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+The integration suite uses real Socket.IO clients against an ephemeral local server. It covers matchmaking, queue cleanup, authorization, message tracking, room finalization, and disconnect behavior.
+
+## Privacy model
+
+Tots currently follows these principles:
+
+- No accounts or permanent user identity
+- No permanent chat history
+- No database required
+- Behavioral profiles exist only for the active connection
+- Raw tracked messages are deleted when the conversation ends
+- Development inspection events are unavailable in production
+
+The current report handler records only temporary session metadata. Production moderation will require explicit privacy documentation and durable, access-controlled storage.
+
+## Deployment
+
+The frontend and backend are deployed separately:
+
+- Build the frontend with `npm run build` and publish the generated `frontend/dist` directory.
+- Run the backend with `npm start` on a host that supports persistent WebSocket connections.
+- Set `VITE_SOCKET_URL` to the deployed backend URL.
+- Set `CLIENT_ORIGINS` to the deployed frontend origins.
+
+The current in-memory queue and state require a single backend instance. Horizontal scaling will require shared matchmaking and Socket.IO infrastructure such as Redis.
+
+## Roadmap
+
+- Convert conversation summaries into explainable behavior scores
+- Add rule-based sentiment and topic extraction
+- Introduce compatibility-aware matchmaking
+- Compare smart matching against random matching through anonymous aggregate metrics
+- Add stronger reporting, blocking, and moderation workflows
+- Add shared state for multiple backend instances
+- Expand accessibility and end-to-end browser coverage
 
 ## License
 
-This repository does not currently contain a license file. If you want to add one, consider an OSI-approved license such as MIT or Apache-2.0.
-
-## Contact
-
-Maintainer: waruna-2003
-
-Add any project-specific notes (known issues, roadmap, credits) below.
+The backend package currently declares the ISC license. Add a root `LICENSE` file before distributing the complete project under that license.
