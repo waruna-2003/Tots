@@ -3,6 +3,8 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const { v4: uuidv4 } = require("uuid");
+const activeUsers = require("./state/activeUsers");
+const createTemporaryUser = require("./factories/createTemporaryUser");
 
 const DEFAULT_ORIGINS = [
   "http://localhost:5173",
@@ -43,6 +45,15 @@ function createChatServer(options = {}) {
   function leaveSession(socket, reason = "left") {
     removeFromQueue(socket.id);
     const roomId = socket.data.roomId;
+    const user = activeUsers.get(socket.id);
+
+    if (user) {
+      user.status = "idle";
+      user.currentRoomId = null;
+      user.lastActiveAt = Date.now();
+      if (reason === "next" && roomId) user.statistics.chatsSkipped += 1;
+    }
+
     if (!roomId) return;
 
     socket.data.roomId = null;
@@ -66,15 +77,29 @@ function createChatServer(options = {}) {
     if (waitingSet.has(socket.id)) return;
     waitingSet.add(socket.id);
     waitingQueue.push(socket.id);
+    const user = activeUsers.get(socket.id);
+    if (user) {
+      user.status = "waiting";
+      user.currentRoomId = null;
+      user.lastActiveAt = Date.now();
+    }
     socket.emit("match_waiting");
   }
 
   io.on("connection", (socket) => {
+    const temporaryUser = createTemporaryUser(socket.id);
+    activeUsers.set(socket.id, temporaryUser);
     socket.data.roomId = null;
     socket.data.messageTimes = [];
     broadcastPresence();
 
     socket.on("find_match", () => {
+      const currentUser = activeUsers.get(socket.id);
+      if (!currentUser) {
+        socket.emit("server_error", { message: "Temporary user profile was not found." });
+        return;
+      }
+
       leaveSession(socket, "next");
       const partner = nextWaitingSocket(socket.id);
 
@@ -84,10 +109,24 @@ function createChatServer(options = {}) {
       }
 
       const roomId = uuidv4();
+      const partnerUser = activeUsers.get(partner.id);
+      if (!partnerUser) {
+        enqueue(socket);
+        return;
+      }
+
       socket.data.roomId = roomId;
       partner.data.roomId = roomId;
       socket.join(roomId);
       partner.join(roomId);
+
+      const now = Date.now();
+      currentUser.status = "chatting";
+      currentUser.currentRoomId = roomId;
+      currentUser.lastActiveAt = now;
+      partnerUser.status = "chatting";
+      partnerUser.currentRoomId = roomId;
+      partnerUser.lastActiveAt = now;
 
       socket.emit("match_found", { roomId, myId: socket.id });
       partner.emit("match_found", { roomId, myId: partner.id });
@@ -137,6 +176,14 @@ function createChatServer(options = {}) {
       }
       socket.data.messageTimes.push(now);
 
+      const currentUser = activeUsers.get(socket.id);
+      if (!currentUser) {
+        fail("PROFILE_NOT_FOUND", "Temporary user profile was not found.");
+        return;
+      }
+      currentUser.lastActiveAt = now;
+      currentUser.statistics.totalMessages += 1;
+
       io.to(roomId).emit("receive_message", {
         id: uuidv4(),
         senderId: socket.id,
@@ -162,8 +209,15 @@ function createChatServer(options = {}) {
       if (typeof acknowledge === "function") acknowledge({ ok: true });
     });
 
+    if (process.env.NODE_ENV !== "production") {
+      socket.on("get_my_profile", () => {
+        socket.emit("my_profile", activeUsers.get(socket.id) || null);
+      });
+    }
+
     socket.on("disconnect", () => {
       leaveSession(socket, "disconnected");
+      activeUsers.delete(socket.id);
       broadcastPresence();
     });
   });
