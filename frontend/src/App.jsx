@@ -124,7 +124,7 @@ function App() {
     );
   }
 
-  return <Home onStart={beginMatching} />;
+  return <Home onStart={beginMatching} onlineCount={onlineCount} />;
 }
 
 export default App;

@@ -1,21 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
-  font-family: 'Inter', system-ui, sans-serif;
+  --green-primary: #77dd77;
+  --green-primary-hover: #68cb68;
+  --green-light: #adebb3;
+  --green-tea: #d0f0c0;
+  --green-sage: #c1e1c1;
+  --page-background: #eef5ef;
+  --chat-background: #e8f0e9;
+  --surface: #ffffff;
+  --surface-soft: #f6faf6;
+  --text-primary: #1f2d24;
+  --text-secondary: #66736b;
+  --text-muted: #89948d;
+  --border-color: #dce6dd;
+  --danger: #c94f4f;
+  --shadow-sm: 0 4px 12px rgba(39, 76, 50, 0.07);
+  --shadow-md: 0 12px 35px rgba(39, 76, 50, 0.12);
+  font-family: "Inter", Arial, sans-serif;
+  color: var(--text-primary);
+  background: var(--page-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
-  margin: 0;
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+body {
+  min-width: 320px;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at top left, rgba(173, 235, 179, 0.38), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(208, 240, 192, 0.4), transparent 32%),
+    var(--page-background);
 }
-
-button,
-input {
-  font: inherit;
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(119, 221, 119, 0.35);
+  outline-offset: 2px;
+}
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

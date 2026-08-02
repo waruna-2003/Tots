@@ -74,7 +74,7 @@ function Chat({
             className="next-btn"
             onClick={onNext}
           >
-            Next Person →
+            <span className="next-label">Next person</span><span className="next-icon" aria-hidden="true">→</span>
           </button>
         </div>
       </header>
@@ -158,7 +158,7 @@ function Chat({
           onClick={onSend}
           disabled={!canSend || !message.trim()}
         >
-          Send
+          <span aria-hidden="true">➤</span><span className="visually-hidden">Send</span>
         </button>
 
       </footer>
